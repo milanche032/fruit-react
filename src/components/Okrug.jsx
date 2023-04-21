@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { getDatabase, ref, onValue, push } from "firebase/database";
+import { getDatabase, ref, onValue, push, set } from "firebase/database";
 import {
   Button,
   TextField,
@@ -34,7 +34,10 @@ function Okrug() {
     const dbRef = ref(getDatabase(), "districts");
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
-      setData(Object.values(data));
+     setData(Object.values(data)) ;
+ 
+
+
     });
   }, []);
 
@@ -48,9 +51,13 @@ function Okrug() {
   const handleNewDistrictSubmit = (event) => {
     event.preventDefault();
     const dbRef = ref(getDatabase(), "districts");
-    const newId = uuidv4();
-    push(dbRef, { ...newDistrict, id: newId });
+    const newDistrictRef = push(dbRef);
+    set(newDistrictRef, { ...newDistrict, id: newDistrictRef.key });
     setModalVisible(false);
+  };
+  const handleDeleteDistrict = (id) => {
+    const dbRef = ref(getDatabase(), `districts/${id}`);
+    set(dbRef, null);
   };
 
   return (
@@ -114,6 +121,9 @@ function Okrug() {
           <Button onClick={handleNewDistrictSubmit}>Add</Button>
         </DialogActions>
       </Dialog>
+      {data.length === 0 ? (
+  <p>No data</p>
+) : (
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
@@ -135,11 +145,17 @@ function Okrug() {
                 <TableCell>{item.population}</TableCell>
                 <TableCell>{item.headquarters}</TableCell>
                 <TableCell>{item.region}</TableCell>
+                <TableCell>
+                  <Button onClick={() => handleDeleteDistrict(item.id)}>
+                    Delete
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </TableContainer>
+    )}
     </div>
   );
 }
