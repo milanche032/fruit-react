@@ -15,12 +15,10 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-import { v4 as uuidv4 } from "uuid";
-import { Link } from "react-router-dom";
-
 function Okrug() {
   const [data, setData] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [newDistrict, setNewDistrict] = useState({
     name: "",
     map: "",
@@ -29,15 +27,53 @@ function Okrug() {
     headquarters: "",
     region: "",
   });
+  const [editDistrict, setEditDistrict] = useState({
+    id: "",
+    name: "",
+    map: "",
+    area: "",
+    population: "",
+    headquarters: "",
+    region: "",
+  });
+  const fields = [
+    {
+      name: 'name',
+      label: 'Name',
+      type: 'text',
+    },
+    {
+      name: 'map',
+      label: 'Map',
+      type: 'text',
+    },
+    {
+      name: 'area',
+      label: 'Area',
+      type: 'number',
+    },
+    {
+      name: 'population',
+      label: 'Population',
+      type: 'number',
+    },
+    {
+      name: 'headquarters',
+      label: 'Headquarters',
+      type: 'text',
+    },
+    {
+      name: 'region',
+      label: 'Region',
+      type: 'text',
+    },
+  ];
 
   useEffect(() => {
     const dbRef = ref(getDatabase(), "districts");
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
      setData(Object.values(data)) ;
- 
-
-
     });
   }, []);
 
@@ -51,9 +87,48 @@ function Okrug() {
   const handleNewDistrictSubmit = (event) => {
     event.preventDefault();
     const dbRef = ref(getDatabase(), "districts");
-    const newDistrictRef = push(dbRef);
-    set(newDistrictRef, { ...newDistrict, id: newDistrictRef.key });
+    if (newDistrict.id) {
+      const districtRef = ref(dbRef, newDistrict.id);
+      set(districtRef, { ...newDistrict });
+    } else {
+      const newDistrictRef = push(dbRef);
+      set(newDistrictRef, { ...newDistrict, id: newDistrictRef.key });
+    }
+    setNewDistrict({
+      name: "",
+      map: "",
+      area: "",
+      population: "",
+      headquarters: "",
+      region: "",
+    });
     setModalVisible(false);
+  };
+  const handleEditDistrictChange = (event) => {
+    setEditDistrict({
+      ...editDistrict,
+      [event.target.name]: event.target.value,
+    });
+  };
+  const handleEditDistrictSubmit = (event) => {
+    event.preventDefault();
+    const dbRef = ref(getDatabase(), `districts/${editDistrict.id}`);
+    set(dbRef, { ...editDistrict });
+    setEditDistrict({
+      name: "",
+      map: "",
+      area: "",
+      population: "",
+      headquarters: "",
+      region: "",
+    });
+    setEditModalVisible(false);
+  };
+  const handleEditDistrict = (item) => {
+    setEditDistrict({
+      ...item,
+    });
+    setEditModalVisible(true);
   };
   const handleDeleteDistrict = (id) => {
     const dbRef = ref(getDatabase(), `districts/${id}`);
@@ -65,60 +140,36 @@ function Okrug() {
       <Button variant="contained" onClick={() => setModalVisible(true)}>
         Add new district
       </Button>
-      <Button component={Link} to="/" variant="contained" color="primary">
-        Home
-      </Button>
-      <Dialog open={modalVisible} onClose={() => setModalVisible(false)}>
-        <DialogTitle>Add new district</DialogTitle>
+      <Dialog open={modalVisible || editModalVisible} onClose={() => setModalVisible(false)}>
+        <DialogTitle>
+          {editModalVisible ? "Edit District" : "Add new District"}
+        </DialogTitle>
         <DialogContent>
-          <TextField
-            fullWidth
-            label="Name"
-            name="name"
-            value={newDistrict.name}
-            onChange={handleNewDistrictChange}
-          />
-          <TextField
-            fullWidth
-            label="Map"
-            name="map"
-            value={newDistrict.map}
-            onChange={handleNewDistrictChange}
-          />
-          <TextField
-            fullWidth
-            label="Area"
-            name="area"
-            type="number"
-            value={newDistrict.area}
-            onChange={handleNewDistrictChange}
-          />
-          <TextField
-            fullWidth
-            label="Population"
-            name="population"
-            type="number"
-            value={newDistrict.population}
-            onChange={handleNewDistrictChange}
-          />
-          <TextField
-            fullWidth
-            label="Headquarters"
-            name="headquarters"
-            value={newDistrict.headquarters}
-            onChange={handleNewDistrictChange}
-          />
-          <TextField
-            fullWidth
-            label="Region"
-            name="region"
-            value={newDistrict.region}
-            onChange={handleNewDistrictChange}
-          />
-        </DialogContent>
+          {fields.map((field) => (
+            <TextField
+              key={field.name}
+              fullWidth
+              label={field.label}
+              name={field.name}
+              type={field.type}
+              value={
+                editModalVisible ? editDistrict[field.name] : newDistrict[field.name]
+              }
+              onChange={
+                editModalVisible ? handleEditDistrictChange : handleNewDistrictChange
+              }
+            />
+          ))}
+         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setModalVisible(false)}>Cancel</Button>
-          <Button onClick={handleNewDistrictSubmit}>Add</Button>
+        <Button onClick={() => setModalVisible(false) || setEditModalVisible(false)}>Cancel</Button>
+          <Button
+            onClick={
+              editModalVisible ? handleEditDistrictSubmit : handleNewDistrictSubmit
+            }
+          >
+            {editModalVisible ? "Save" : "Add"}
+          </Button>
         </DialogActions>
       </Dialog>
       {data.length === 0 ? (
@@ -134,6 +185,7 @@ function Okrug() {
               <TableCell>Population</TableCell>
               <TableCell>Headquarters</TableCell>
               <TableCell>Region</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -146,7 +198,10 @@ function Okrug() {
                 <TableCell>{item.headquarters}</TableCell>
                 <TableCell>{item.region}</TableCell>
                 <TableCell>
-                  <Button onClick={() => handleDeleteDistrict(item.id)}>
+                  <Button variant="outlined" onClick={() => handleEditDistrict(item)}>
+                    Edit
+                  </Button>
+                  <Button variant="outlined" onClick={() => handleDeleteDistrict(item.id)}>
                     Delete
                   </Button>
                 </TableCell>

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { getDatabase, ref, onValue, push, set } from "firebase/database";
-import { Link } from "react-router-dom";
 import {
   Button,
   TextField,
@@ -45,9 +44,42 @@ function Grad() {
     latitude: "",
   });
   const [districts, setDistricts] = useState([]);
-
+  const fields = [
+    {
+      name: 'name',
+      label: 'Name',
+      type: 'text',
+    },
+    {
+      name: 'logo',
+      label: 'Logo',
+      type: 'text',
+    },
+    {
+      name: 'area',
+      label: 'Area',
+      type: 'number',
+    },
+    {
+      name: 'population',
+      label: 'Population',
+      type: 'number',
+    },
+    {
+      name: 'longitude',
+      label: 'Longitude',
+      type: 'text',
+    },
+    {
+      name: 'latitude',
+      label: 'Latitude',
+      type: 'text',
+    },
+  ];
+  
   useEffect(() => {
     const dbRef = ref(getDatabase(), "cities");
+    console.log(dbRef);
     onValue(dbRef, (snapshot) => {
       const data = snapshot.val();
       setData(Object.values(data));
@@ -99,9 +131,8 @@ function Grad() {
 
   const handleEditCitySubmit = (event) => {
     event.preventDefault();
-    const dbRef = ref(getDatabase(), "cities");
-    const cityRef = ref(dbRef, editCity.id);
-    set(cityRef, { ...editCity });
+    const dbRef = ref(getDatabase(), `cities/${editCity.id}`);
+    set(dbRef, { ...editCity });
     setEditCity({
       // reset the edit city form
       id: "",
@@ -140,91 +171,22 @@ function Grad() {
       <Button variant="contained" onClick={() => setModalVisible(true)}>
         Add new city
       </Button>
-      <Button component={Link} to="/" variant="contained" color="primary">
-        Home
-      </Button>
-      <Dialog open={modalVisible} onClose={() => setModalVisible(false)}>
-        <DialogTitle>Add new city</DialogTitle>
+      <Dialog open={modalVisible || editModalVisible} onClose={() => setModalVisible(false)}>
+        <DialogTitle>
+          {editModalVisible ? "Edit city" : "Add new city"}
+        </DialogTitle>
         <DialogContent>
-          <FormControl fullWidth>
+        <FormControl fullWidth>
             <InputLabel id="district-select-label">District</InputLabel>
             <Select
               labelId="district-select-label"
               id="district-select"
-              value={newCity.district_id}
-              onChange={handleDistrictSelect}
-              label="District"
-            >
-              {districts.map((district) => (
-                <MenuItem key={district.id} value={district.id}>
-                  {district.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <TextField
-            fullWidth
-            label="Name"
-            name="name"
-            value={newCity.name}
-            onChange={handleNewCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Logo"
-            name="logo"
-            value={newCity.logo}
-            onChange={handleNewCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Area"
-            name="area"
-            type="number"
-            value={newCity.area}
-            onChange={handleNewCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Population"
-            name="population"
-            type="number"
-            value={newCity.population}
-            onChange={handleNewCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Longitude"
-            name="longitude"
-            value={newCity.longitude}
-            onChange={handleNewCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Latitude"
-            name="latitude"
-            value={newCity.latitude}
-            onChange={handleNewCityChange}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setModalVisible(false)}>Cancel</Button>
-          <Button onClick={handleNewCitySubmit}>Add</Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={editModalVisible}
-        onClose={() => setEditModalVisible(false)}
-      >
-        <DialogTitle>Edit city</DialogTitle>
-        <DialogContent>
-          <FormControl fullWidth>
-            <InputLabel id="district-select-label">District</InputLabel>
-            <Select
-              labelId="district-select-label"
-              id="district-select"
-              value={editCity.district_id}
-              onChange={handleEditCityChange}
+              value={
+                editModalVisible ? editCity.district_id : newCity.district_id
+              }
+              onChange={
+                editModalVisible ? handleEditCityChange : handleDistrictSelect
+              }
               name="district_id"
               label="District"
             >
@@ -235,56 +197,35 @@ function Grad() {
               ))}
             </Select>
           </FormControl>
-          <TextField
-            fullWidth
-            label="Name"
-            name="name"
-            value={editCity.name}
-            onChange={handleEditCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Logo"
-            name="logo"
-            value={editCity.logo}
-            onChange={handleEditCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Area"
-            name="area"
-            type="number"
-            value={editCity.area}
-            onChange={handleEditCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Population"
-            name="population"
-            type="number"
-            value={editCity.population}
-            onChange={handleEditCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Longitude"
-            name="longitude"
-            value={editCity.longitude}
-            onChange={handleEditCityChange}
-          />
-          <TextField
-            fullWidth
-            label="Latitude"
-            name="latitude"
-            value={editCity.latitude}
-            onChange={handleEditCityChange}
-          />
+          {fields.map((field) => (
+            <TextField
+              key={field.name}
+              fullWidth
+              label={field.label}
+              name={field.name}
+              type={field.type}
+              value={
+                editModalVisible ? editCity[field.name] : newCity[field.name]
+              }
+              onChange={
+                editModalVisible ? handleEditCityChange : handleNewCityChange
+              }
+            />
+          ))}
+          
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditModalVisible(false)}>Cancel</Button>
-          <Button onClick={handleEditCitySubmit}>Save</Button>
+        <Button onClick={() => setModalVisible(false) || setEditModalVisible(false)}>Cancel</Button>
+          <Button
+            onClick={
+              editModalVisible ? handleEditCitySubmit : handleNewCitySubmit
+            }
+          >
+            {editModalVisible ? "Save" : "Add"}
+          </Button>
         </DialogActions>
       </Dialog>
+
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
