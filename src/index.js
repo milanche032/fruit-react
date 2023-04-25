@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import { initializeApp } from 'firebase/app';
 import { getAnalytics } from 'firebase/analytics';
+import { getAuth } from 'firebase/auth';
+
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,7 +20,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+export const analytics = getAnalytics(app);
+// Initialize Firebase authentication
+export const auth = getAuth(app);
+
 
 ReactDOM.render(
   <React.StrictMode>
