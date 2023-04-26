@@ -108,7 +108,7 @@ return (
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       >
         {authUser ? (
-        <>
+        <div>
            <MenuItem onClick={handleClose}>
            <Avatar className={classes.avatar} sx={{ width: 32, height: 32 }}>{Array.from(authUser.email)[0]}</Avatar> {authUser.email}
         </MenuItem>
@@ -125,9 +125,9 @@ return (
           </ListItemIcon>
           Logout
         </MenuItem>
-        </>
+        </div>
       ) : (
-        <>
+        <div>
          <MenuItem onClick={handleClose}>
           <Avatar /> Not signed in
         </MenuItem>
@@ -144,7 +144,7 @@ return (
           </ListItemIcon>
           Sign up
         </MenuItem>
-       </>
+       </div>
       )}
        
       </Menu>

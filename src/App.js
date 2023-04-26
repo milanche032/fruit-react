@@ -5,6 +5,7 @@ import Okrug from "./components/Okrug";
 import Grad from "./components/Grad";
 import Opstina from "./components/Opstina";
 import Layout from "./components/Layout";
+import PrivateRoute from "./components/Auth/PrivateRoute";
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import SignpostIcon from "@mui/icons-material/Signpost";
 import HomeIcon from "@mui/icons-material/Home";
@@ -14,11 +15,6 @@ import SignUp from "./components/Auth/SignUp";
 import AuthContext from "./components/context/AuthContext";
 
 export const menuItems = [
-  {
-    name: "Početna",
-    icon: <HomeIcon />,
-    path: "/",
-  },
   {
     name: "Okrug",
     icon: <SignpostIcon />,
@@ -44,12 +40,14 @@ function App() {
       <Router>
         <Layout>
           <Routes>
-            <Route path="/" element={<Home />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/okrug" element={<Okrug />} />
-            <Route path="/grad" element={<Grad />} />
-            <Route path="/opstina" element={<Opstina />} />
+            <Route path="/" element={<PrivateRoute />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/okrug" element={<Okrug />} />
+              <Route path="/grad" element={<Grad />} />
+              <Route path="/opstina" element={<Opstina />} />
+            </Route>
           </Routes>
         </Layout>
       </Router>
